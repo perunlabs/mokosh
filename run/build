@@ -1,0 +1,62 @@
+#!/bin/bash -e
+
+HERE=`dirname ${0}`
+cd "${HERE}"
+cd ..
+PROJECT=`pwd`
+	JAVA="${PROJECT}/main/java"
+BUILD="/tmp/build_mokosh"
+	UNPACKED="${BUILD}/unpacked"
+
+########## CLEANUP ##########
+rm \
+  --recursive \
+  --force \
+  ${BUILD}
+
+########## COMPILE SOURCES ##########
+mkdir \
+  --parents \
+  ${UNPACKED}
+javac \
+  -sourcepath "${JAVA}" \
+  -source 1.8 \
+  -target 1.8 \
+  -d "${UNPACKED}" \
+  "${JAVA}/com/perunlabs/mokosh/Build.java"
+
+########## COPY SOURCES ##########
+cp \
+  --recursive \
+  "${JAVA}/." \
+  "${UNPACKED}"
+
+########## RESET TIMESTAMPS ##########
+find ${UNPACKED} | xargs touch --date=@0
+
+########## ZIP JAR ##########
+cd ${UNPACKED}
+zip \
+  --quiet \
+  --recurse-paths \
+  --no-dir-entries \
+  ./mokosh.jar \
+  ./*
+cd "${PROJECT}"
+
+########## COPY PRODUCED JAR ##########
+cp \
+  "${UNPACKED}/mokosh.jar" \
+  "${BUILD}"
+
+########## CLEANUP ##########
+rm \
+  --recursive \
+  --force \
+  "${UNPACKED}"
+
+########## FINISHED ##########
+echo ""
+echo "BUILD SUCCESSFUL"
+echo "created ${BUILD}/mokosh.jar"
+echo "sha1sum=`sha1sum ${BUILD}/mokosh.jar | cut -f1 -d' '`"
