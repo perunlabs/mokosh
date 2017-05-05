@@ -1,5 +1,11 @@
 package com.perunlabs.mokosh.run.testing;
 
+import static java.lang.String.format;
+
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
+
 import com.perunlabs.mokosh.AbortException;
 
 public class Testing {
@@ -19,5 +25,17 @@ public class Testing {
     } catch (InterruptedException e) {
       throw new AbortException(e);
     }
+  }
+
+  public static Matcher<Throwable> withMessage(Matcher<String> messageMatcher) {
+    return new TypeSafeMatcher<Throwable>() {
+      protected boolean matchesSafely(Throwable item) {
+        return messageMatcher.matches(item.getMessage());
+      }
+
+      public void describeTo(Description description) {
+        description.appendText(format("withMessage(%s)", messageMatcher));
+      }
+    };
   }
 }
