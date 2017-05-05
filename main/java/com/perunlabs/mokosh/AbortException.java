@@ -21,4 +21,10 @@ public class AbortException extends RuntimeException {
   public AbortException(Throwable cause) {
     super(cause);
   }
+
+  public static void abortIfInterrupted() {
+    if (Thread.interrupted()) {
+      throw new AbortException();
+    }
+  }
 }
