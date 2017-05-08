@@ -1,7 +1,7 @@
 package com.perunlabs.mokosh.run;
 
-import static com.perunlabs.mokosh.AbortException.abortIfInterrupted;
 import static com.perunlabs.mokosh.MokoshException.check;
+import static com.perunlabs.mokosh.common.Streams.pump;
 import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.run.EntangledRunning.entangle;
 
@@ -100,18 +100,5 @@ public class RunningProcess implements Running<Void> {
     process.destroy();
     pumping.abort();
     return this;
-  }
-
-  private static void pump(InputStream input, OutputStream output) {
-    try {
-      int count;
-      byte[] buffer = new byte[8 * 1024];
-      while ((count = input.read(buffer)) != -1) {
-        abortIfInterrupted();
-        output.write(buffer, 0, count);
-      }
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
   }
 }
