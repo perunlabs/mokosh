@@ -2,14 +2,12 @@ package com.perunlabs.mokosh.run;
 
 import static com.perunlabs.mokosh.AbortException.abortIfInterrupted;
 import static com.perunlabs.mokosh.MokoshException.check;
+import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.run.EntangledRunning.entangle;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -40,10 +38,10 @@ public class RunningProcess implements Running<Void> {
     try {
       process = processBuilder.start();
     } catch (IOException e) {
-      throw wrap(e);
+      throw unchecked(e);
     }
 
-    Running<Void> pumpingStdin = run(() -> {
+    Running<Void> pumpingStdin = Run.run(unchecked(() -> {
       try (OutputStream processStdin = process.getOutputStream()) {
         try {
           pump(stdin, processStdin);
@@ -54,8 +52,8 @@ public class RunningProcess implements Running<Void> {
           stdin.close();
         }
       }
-    });
-    Running<Void> pumpingStdout = run(() -> {
+    }));
+    Running<Void> pumpingStdout = Run.run(unchecked(() -> {
       try (InputStream processStdout = process.getInputStream()) {
         pump(processStdout, stdout);
       } finally {
@@ -63,8 +61,8 @@ public class RunningProcess implements Running<Void> {
           stdout.close();
         }
       }
-    });
-    Running<Void> pumpingStderr = run(() -> {
+    }));
+    Running<Void> pumpingStderr = Run.run(unchecked(() -> {
       try (InputStream processStderr = process.getErrorStream()) {
         pump(processStderr, stderr);
       } finally {
@@ -72,7 +70,7 @@ public class RunningProcess implements Running<Void> {
           stderr.close();
         }
       }
-    });
+    }));
     Running<Void> pumping = entangle(pumpingStdin, pumpingStdout, pumpingStderr);
     return new RunningProcess(process, pumping);
   }
@@ -113,31 +111,7 @@ public class RunningProcess implements Running<Void> {
         output.write(buffer, 0, count);
       }
     } catch (IOException e) {
-      throw wrap(e);
-    }
-  }
-
-  private static Running<Void> run(IoOperation operation) {
-    return Run.run(() -> {
-      try {
-        operation.invoke();
-      } catch (IOException e) {
-        throw wrap(e);
-      }
-    });
-  }
-
-  private static interface IoOperation {
-    void invoke() throws IOException;
-  }
-
-  private static RuntimeException wrap(IOException exception) {
-    if (exception instanceof ClosedByInterruptException) {
-      return new AbortException(exception);
-    } else if (exception instanceof InterruptedIOException) {
-      return new AbortException(exception);
-    } else {
-      return new UncheckedIOException(exception);
+      throw unchecked(e);
     }
   }
 }
