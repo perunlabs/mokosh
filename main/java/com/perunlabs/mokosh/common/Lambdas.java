@@ -9,4 +9,13 @@ public class Lambdas {
       return null;
     };
   }
+
+  public static boolean failed(Supplier<?> supplier) {
+    try {
+      supplier.get();
+    } catch (Throwable e) {
+      return true;
+    }
+    return false;
+  }
 }

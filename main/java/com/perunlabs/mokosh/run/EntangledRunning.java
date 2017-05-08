@@ -1,6 +1,7 @@
 package com.perunlabs.mokosh.run;
 
 import static com.perunlabs.mokosh.MokoshException.check;
+import static com.perunlabs.mokosh.common.Lambdas.failed;
 import static com.perunlabs.mokosh.run.Run.run;
 import static java.util.Arrays.asList;
 
@@ -62,14 +63,5 @@ public class EntangledRunning<T> implements Running<T> {
   public boolean isRunning() {
     return allRunnings.stream()
         .anyMatch(Running::isRunning);
-  }
-
-  private static boolean failed(Supplier<?> result) {
-    try {
-      result.get();
-    } catch (Throwable e) {
-      return true;
-    }
-    return false;
   }
 }
