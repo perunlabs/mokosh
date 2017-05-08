@@ -1,6 +1,7 @@
 package com.perunlabs.mokosh.run;
 
 import static com.perunlabs.mokosh.MokoshException.check;
+import static com.perunlabs.mokosh.common.Lambdas.asSupplier;
 import static java.lang.String.format;
 
 import java.util.concurrent.CountDownLatch;
@@ -57,12 +58,5 @@ public class Run {
   public static Running<Void> run(Runnable code) {
     check(code != null);
     return run(asSupplier(code));
-  }
-
-  private static Supplier<Void> asSupplier(Runnable code) {
-    return () -> {
-      code.run();
-      return null;
-    };
   }
 }
