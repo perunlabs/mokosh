@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.run.testing;
+package com.perunlabs.mokosh.testing;
 
 import static java.lang.String.format;
 

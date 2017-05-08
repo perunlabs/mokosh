@@ -1,8 +1,8 @@
 package com.perunlabs.mokosh.run;
 
 import static com.perunlabs.mokosh.run.RunningProcess.run;
-import static com.perunlabs.mokosh.run.testing.Testing.interruptMeAfterSeconds;
-import static com.perunlabs.mokosh.run.testing.Testing.withMessage;
+import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
+import static com.perunlabs.mokosh.testing.Testing.withMessage;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
