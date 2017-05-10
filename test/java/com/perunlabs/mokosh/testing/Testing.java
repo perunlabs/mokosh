@@ -2,6 +2,10 @@ package com.perunlabs.mokosh.testing;
 
 import static java.lang.String.format;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -19,12 +23,13 @@ public class Testing {
     return null;
   }
 
-  public static void sleepSeconds(double seconds) {
+  public static Void sleepSeconds(double seconds) {
     try {
       Thread.sleep((long) (seconds * 1000));
     } catch (InterruptedException e) {
       throw new AbortException(e);
     }
+    return null;
   }
 
   public static Matcher<Throwable> withMessage(Matcher<String> messageMatcher) {
@@ -37,5 +42,11 @@ public class Testing {
         description.appendText(format("withMessage(%s)", messageMatcher));
       }
     };
+  }
+
+  public static <E> List<E> collectToList(Iterator<E> iterator) {
+    List<E> list = new ArrayList<>();
+    iterator.forEachRemaining(list::add);
+    return list;
   }
 }
