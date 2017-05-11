@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.perunlabs.mokosh.pipe.BlockingPipe;
 import com.perunlabs.mokosh.pipe.Buffer;
+import com.perunlabs.mokosh.pipe.MultiPipe;
 import com.perunlabs.mokosh.run.EntangledRunning;
 import com.perunlabs.mokosh.run.Run;
 import com.perunlabs.mokosh.run.RunningProcess;
@@ -15,5 +16,6 @@ class Build {
       EntangledRunning.class);
   public static Object pipe = asList(
       BlockingPipe.class,
+      MultiPipe.class,
       Buffer.class);
 }
