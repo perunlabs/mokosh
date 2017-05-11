@@ -49,4 +49,12 @@ public class Testing {
     iterator.forEachRemaining(list::add);
     return list;
   }
+
+  public static byte[] bytes(int count) {
+    byte[] bytes = new byte[count];
+    for (int index = 0; index < bytes.length; index++) {
+      bytes[index] = (byte) index;
+    }
+    return bytes;
+  }
 }
