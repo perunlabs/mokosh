@@ -9,6 +9,8 @@ import java.util.List;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.testory.proxy.Handler;
+import org.testory.proxy.Invocation;
 
 import com.perunlabs.mokosh.AbortException;
 
@@ -56,5 +58,14 @@ public class Testing {
       bytes[index] = (byte) index;
     }
     return bytes;
+  }
+
+  public static Handler willSleepSeconds(double seconds) {
+    return new Handler() {
+      public Object handle(Invocation invocation) throws Throwable {
+        sleepSeconds(seconds);
+        return null;
+      }
+    };
   }
 }
