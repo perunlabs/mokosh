@@ -2,8 +2,8 @@ package com.perunlabs.mokosh.run;
 
 import static com.perunlabs.mokosh.run.EntangledRunning.entangle;
 import static com.perunlabs.mokosh.run.Run.run;
-import static com.perunlabs.mokosh.run.testing.Testing.interruptMeAfterSeconds;
-import static com.perunlabs.mokosh.run.testing.Testing.sleepSeconds;
+import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
+import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
 import static java.util.Arrays.asList;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
