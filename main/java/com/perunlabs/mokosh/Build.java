@@ -2,6 +2,7 @@ package com.perunlabs.mokosh;
 
 import static java.util.Arrays.asList;
 
+import com.perunlabs.mokosh.flow.BufferingIterating;
 import com.perunlabs.mokosh.flow.BufferingStreaming;
 import com.perunlabs.mokosh.pipe.BlockingPipe;
 import com.perunlabs.mokosh.pipe.Buffer;
@@ -22,5 +23,6 @@ class Build {
       Buffer.class,
       Pipeline.class);
   public static Object flow = asList(
-      BufferingStreaming.class);
+      BufferingStreaming.class,
+      BufferingIterating.class);
 }
