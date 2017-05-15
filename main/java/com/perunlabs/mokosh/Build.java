@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.perunlabs.mokosh.flow.BufferingIterating;
 import com.perunlabs.mokosh.flow.BufferingStreaming;
+import com.perunlabs.mokosh.flow.DelegatingIterating;
 import com.perunlabs.mokosh.flow.Replicator;
 import com.perunlabs.mokosh.pipe.BlockingPipe;
 import com.perunlabs.mokosh.pipe.Buffer;
@@ -26,5 +27,6 @@ class Build {
   public static Object flow = asList(
       BufferingStreaming.class,
       BufferingIterating.class,
-      Replicator.class);
+      Replicator.class,
+      DelegatingIterating.class);
 }
