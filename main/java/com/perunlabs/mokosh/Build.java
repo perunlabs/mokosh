@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import com.perunlabs.mokosh.flow.BufferingIterating;
 import com.perunlabs.mokosh.flow.BufferingStreaming;
 import com.perunlabs.mokosh.flow.DelegatingIterating;
+import com.perunlabs.mokosh.flow.DelegatingStreaming;
 import com.perunlabs.mokosh.flow.Replicator;
 import com.perunlabs.mokosh.pipe.BlockingPipe;
 import com.perunlabs.mokosh.pipe.Buffer;
@@ -28,5 +29,6 @@ class Build {
       BufferingStreaming.class,
       BufferingIterating.class,
       Replicator.class,
-      DelegatingIterating.class);
+      DelegatingIterating.class,
+      DelegatingStreaming.class);
 }
