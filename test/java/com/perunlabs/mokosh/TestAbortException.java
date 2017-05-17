@@ -1,7 +1,7 @@
 package com.perunlabs.mokosh;
 
 import static com.perunlabs.mokosh.AbortException.abortIfInterrupted;
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static org.testory.Testory.given;
 import static org.testory.Testory.thenReturned;
 import static org.testory.Testory.thenThrown;
@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import org.junit.Test;
 
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
 public class TestAbortException {
   private Running<Void> running;
@@ -19,7 +19,7 @@ public class TestAbortException {
 
   @Test
   public void aborts_if_interrupted() {
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       Thread.currentThread().interrupt();
       abortIfInterrupted();
     }));
