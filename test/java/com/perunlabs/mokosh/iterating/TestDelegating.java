@@ -1,6 +1,6 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
-import static com.perunlabs.mokosh.flow.DelegatingIterating.iterating;
+import static com.perunlabs.mokosh.iterating.Delegating.iterating;
 import static java.lang.String.format;
 import static org.testory.Testory.given;
 import static org.testory.Testory.givenTest;
@@ -16,9 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.perunlabs.mokosh.MokoshException;
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
-public class TestDelegatingIterating {
+public class TestDelegating {
   private Iterator<Foo> iterator;
   private Running<Void> running;
   private Iterating<Foo> iterating;

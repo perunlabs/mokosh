@@ -2,24 +2,23 @@ package com.perunlabs.mokosh;
 
 import static java.util.Arrays.asList;
 
-import com.perunlabs.mokosh.flow.BufferingIterating;
-import com.perunlabs.mokosh.flow.BufferingStreaming;
-import com.perunlabs.mokosh.flow.DelegatingIterating;
-import com.perunlabs.mokosh.flow.DelegatingStreaming;
-import com.perunlabs.mokosh.flow.Replicator;
-import com.perunlabs.mokosh.run.EntangledRunning;
-import com.perunlabs.mokosh.run.Run;
-import com.perunlabs.mokosh.run.RunningProcess;
+import com.perunlabs.mokosh.iterating.Replicator;
+import com.perunlabs.mokosh.running.Entangling;
+import com.perunlabs.mokosh.running.Processing;
+import com.perunlabs.mokosh.running.Supplying;
 
 class Build {
   public static Object run = asList(
-      Run.class,
-      RunningProcess.class,
-      EntangledRunning.class);
-  public static Object flow = asList(
-      BufferingStreaming.class,
-      BufferingIterating.class,
+      Supplying.class,
+      Processing.class,
+      Entangling.class);
+
+  public static Object iterating = asList(
       Replicator.class,
-      DelegatingIterating.class,
-      DelegatingStreaming.class);
+      com.perunlabs.mokosh.iterating.Buffering.class,
+      com.perunlabs.mokosh.iterating.Delegating.class);
+
+  public static Object streaming = asList(
+      com.perunlabs.mokosh.streaming.Buffering.class,
+      com.perunlabs.mokosh.streaming.Delegating.class);
 }

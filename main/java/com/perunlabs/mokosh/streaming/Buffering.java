@@ -1,9 +1,9 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
 import static com.perunlabs.mokosh.common.Unchecked.unchecked;
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.lang.String.format;
 
 import java.io.IOException;
@@ -12,13 +12,13 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.function.Supplier;
 
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
-public class BufferingStreaming extends Streaming {
+public class Buffering extends Streaming {
   private final Running<Void> pumping;
   private final InputStream input;
 
-  private BufferingStreaming(Running<Void> pumping, InputStream input) {
+  private Buffering(Running<Void> pumping, InputStream input) {
     this.pumping = pumping;
     this.input = input;
   }
@@ -29,7 +29,7 @@ public class BufferingStreaming extends Streaming {
     try {
       PipedInputStream pipedInput = new PipedInputStream(size);
       PipedOutputStream pipedOutput = new PipedOutputStream(pipedInput);
-      Running<Void> pumping = run(() -> {
+      Running<Void> pumping = supplying(() -> {
         try {
           pump(input, pipedOutput);
           input.close();
@@ -38,7 +38,7 @@ public class BufferingStreaming extends Streaming {
           throw unchecked(e);
         }
       });
-      return new BufferingStreaming(pumping, pipedInput) {
+      return new Buffering(pumping, pipedInput) {
         public String toString() {
           return format("buffering(%s, %s)", size, input);
         }

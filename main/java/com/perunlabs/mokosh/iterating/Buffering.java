@@ -1,7 +1,7 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
 import static com.perunlabs.mokosh.MokoshException.check;
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.lang.String.format;
 
 import java.util.Iterator;
@@ -13,9 +13,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.AbortException;
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
-public class BufferingIterating<E> implements Iterating<E> {
+public class Buffering<E> implements Iterating<E> {
   private final Lock lock = new ReentrantLock();
   private final Condition untilChange = lock.newCondition();
 
@@ -24,8 +24,8 @@ public class BufferingIterating<E> implements Iterating<E> {
   private final List<E> queue = new LinkedList<>();
   private boolean closed;
 
-  private BufferingIterating(int limit, Iterator<E> iterator) {
-    iterating = run(() -> {
+  private Buffering(int limit, Iterator<E> iterator) {
+    iterating = supplying(() -> {
       lock.lock();
       try {
         while (true) {
@@ -62,7 +62,7 @@ public class BufferingIterating<E> implements Iterating<E> {
   public static <E> Iterating<E> buffering(int limit, Iterator<E> iterator) {
     check(limit > 0);
     check(iterator != null);
-    return new BufferingIterating(limit, iterator) {
+    return new Buffering(limit, iterator) {
       public String toString() {
         return format("buffering(%s, %s)", limit, iterator);
       }

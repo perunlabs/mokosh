@@ -1,6 +1,6 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
@@ -21,7 +21,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestRun {
+public class TestSupplying {
   @Rule
   public final Timeout timeout = seconds(1);
 
@@ -45,14 +45,14 @@ public class TestRun {
 
   @Test
   public void supplies_returned_object() {
-    given(running = run(() -> object));
+    given(running = supplying(() -> object));
     when(running.await().get());
     thenReturned(object);
   }
 
   @Test
   public void supplies_thrown_exception() {
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       throw runtimeException;
     }));
     given(result = running.await());
@@ -62,14 +62,14 @@ public class TestRun {
 
   @Test
   public void awaits_completion_returning_object() {
-    given(running = run(() -> object));
+    given(running = supplying(() -> object));
     when(running.await());
     thenReturned();
   }
 
   @Test
   public void awaits_completion_throwing_throwable() {
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       throw new RuntimeException();
     }));
     when(running.await());
@@ -79,7 +79,7 @@ public class TestRun {
   @Test
   public void awaiting_is_abortable() {
     given(latch = new CountDownLatch(1));
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       await(latch);
     }));
     given(thread = start(new Thread(() -> running.await())));
@@ -93,11 +93,11 @@ public class TestRun {
   @Test
   public void runs_in_parallel() {
     given(latch = new CountDownLatch(2));
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       latch.countDown();
       await(latch);
     }));
-    given(otherRunning = run(() -> {
+    given(otherRunning = supplying(() -> {
       latch.countDown();
       await(latch);
     }));
@@ -111,14 +111,14 @@ public class TestRun {
   @Test
   public void is_running() {
     given(latch = new CountDownLatch(1));
-    given(running = run(() -> await(latch)));
+    given(running = supplying(() -> await(latch)));
     when(running.isRunning());
     thenReturned(true);
   }
 
   @Test
   public void is_not_running_if_completed() {
-    given(running = run(() -> {}));
+    given(running = supplying(() -> {}));
     given(running.await());
     when(running.isRunning());
     thenReturned(false);
@@ -127,7 +127,7 @@ public class TestRun {
   @Test
   public void aborts_if_running() {
     given(latch = new CountDownLatch(1));
-    given(running = run(() -> {
+    given(running = supplying(() -> {
       try {
         latch.await();
       } catch (InterruptedException e) {
@@ -141,7 +141,7 @@ public class TestRun {
 
   @Test
   public void aborting_has_no_effect_if_not_running() {
-    given(running = run(() -> object));
+    given(running = supplying(() -> object));
     given(running.await());
     when(running.abort().await().get());
     thenReturned(object);
@@ -150,7 +150,7 @@ public class TestRun {
   @Test
   public void aborted_is_not_running() {
     given(latch = new CountDownLatch(1));
-    given(running = run(() -> await(latch)));
+    given(running = supplying(() -> await(latch)));
     given(running.abort().await());
     when(running.isRunning());
     thenReturned(false);
@@ -158,26 +158,26 @@ public class TestRun {
 
   @Test
   public void abort_returns_this() {
-    given(running = run(() -> object));
+    given(running = supplying(() -> object));
     when(running.abort());
     thenReturned(running);
   }
 
   @Test
   public void uses_parent_thread_name() {
-    when(run(() -> Thread.currentThread().getName()).await().get());
+    when(supplying(() -> Thread.currentThread().getName()).await().get());
     thenReturned(startsWith(Thread.currentThread().getName() + "-"));
   }
 
   @Test
   public void checks_null_supplier() {
-    when(() -> run((Supplier<Object>) null));
+    when(() -> supplying((Supplier<Object>) null));
     thenThrown(MokoshException.class);
   }
 
   @Test
   public void checks_null_runnable() {
-    when(() -> run((Runnable) null));
+    when(() -> supplying((Runnable) null));
     thenThrown(MokoshException.class);
   }
 

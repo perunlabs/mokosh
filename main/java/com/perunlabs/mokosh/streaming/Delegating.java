@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static java.lang.String.format;
@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
-public class DelegatingStreaming extends Streaming {
+public class Delegating extends Streaming {
   private final Running<Void> running;
   private final InputStream input;
 
-  private DelegatingStreaming(Running<Void> running, InputStream input) {
+  private Delegating(Running<Void> running, InputStream input) {
     this.running = running;
     this.input = input;
   }
@@ -21,7 +21,7 @@ public class DelegatingStreaming extends Streaming {
   public static Streaming streaming(Running<Void> running, InputStream input) {
     check(running != null);
     check(input != null);
-    return new DelegatingStreaming(running, input);
+    return new Delegating(running, input);
   }
 
   public Supplier<Void> await() {

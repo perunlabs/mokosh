@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
 import java.util.function.Supplier;
 

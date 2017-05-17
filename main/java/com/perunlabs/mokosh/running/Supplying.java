@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Lambdas.asSupplier;
@@ -11,10 +11,10 @@ import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.AbortException;
 
-public class Run {
+public class Supplying {
   private static final AtomicInteger counter = new AtomicInteger(0);
 
-  public static <T> Running<T> run(Supplier<T> code) {
+  public static <T> Running<T> supplying(Supplier<T> code) {
     check(code != null);
     CountDownLatch executedLatch = new CountDownLatch(1);
     AtomicReference<Supplier<T>> executed = new AtomicReference<>();
@@ -55,8 +55,8 @@ public class Run {
     };
   }
 
-  public static Running<Void> run(Runnable code) {
+  public static Running<Void> supplying(Runnable code) {
     check(code != null);
-    return run(asSupplier(code));
+    return supplying(asSupplier(code));
   }
 }

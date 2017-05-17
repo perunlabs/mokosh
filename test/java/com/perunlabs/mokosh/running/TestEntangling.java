@@ -1,7 +1,7 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
-import static com.perunlabs.mokosh.run.EntangledRunning.entangle;
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.running.Entangling.entangle;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
 import static java.util.Arrays.asList;
@@ -27,7 +27,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestEntangledRunning {
+public class TestEntangling {
   @Rule
   public final Timeout timeout = seconds(1);
 
@@ -49,11 +49,11 @@ public class TestEntangledRunning {
 
   @Test
   public void awaits_for_all() {
-    given(runningA = run(() -> {
+    given(runningA = supplying(() -> {
       sleepSeconds(0.1);
       log.add(1);
     }));
-    given(runningB = run(() -> {
+    given(runningB = supplying(() -> {
       sleepSeconds(0.1);
       log.add(2);
     }));
@@ -65,11 +65,11 @@ public class TestEntangledRunning {
 
   @Test
   public void awaits_for_all_in_list() {
-    given(runningA = run(() -> {
+    given(runningA = supplying(() -> {
       sleepSeconds(0.1);
       log.add(1);
     }));
-    given(runningB = run(() -> {
+    given(runningB = supplying(() -> {
       sleepSeconds(0.1);
       log.add(2);
     }));
@@ -81,7 +81,7 @@ public class TestEntangledRunning {
 
   @Test
   public void awaiting_is_abortable() {
-    given(running = entangle(run(() -> {
+    given(running = entangle(supplying(() -> {
       sleepSeconds(100);
     })));
     given(interruptMeAfterSeconds(0.1));
@@ -91,10 +91,10 @@ public class TestEntangledRunning {
 
   @Test
   public void failed_first_aborts_second() {
-    given(runningA = run(() -> {
+    given(runningA = supplying(() -> {
       throw new RuntimeException();
     }));
-    given(runningB = run(() -> {
+    given(runningB = supplying(() -> {
       sleepSeconds(0.1);
     }));
     given(entangle(runningA, runningB).await());
@@ -105,10 +105,10 @@ public class TestEntangledRunning {
 
   @Test
   public void failed_second_aborts() {
-    given(runningA = run(() -> {
+    given(runningA = supplying(() -> {
       sleepSeconds(0.1);
     }));
-    given(runningB = run(() -> {
+    given(runningB = supplying(() -> {
       throw new RuntimeException();
     }));
     given(entangle(runningA, runningB).await());
@@ -128,7 +128,7 @@ public class TestEntangledRunning {
 
   @Test
   public void aborts_if_waiter_is_aborter() {
-    given(running = entangle(run(() -> {
+    given(running = entangle(supplying(() -> {
       sleepSeconds(100);
     })));
     given(interruptMeAfterSeconds(0.1));
@@ -207,14 +207,14 @@ public class TestEntangledRunning {
 
   /** should compile */
   public void type_is_from_first() {
-    Running<String> stringExecuting = run(() -> "");
+    Running<String> stringExecuting = supplying(() -> "");
     Running<String> joined = entangle(stringExecuting, runningA);
     joined.toString();
   }
 
   /** should compile */
   public void type_of_list_may_be_specific() {
-    Running<String> stringExecuting = run(() -> "");
+    Running<String> stringExecuting = supplying(() -> "");
     List<Running<String>> executings = asList(stringExecuting);
     Running<Void> joined = entangle(executings);
     joined.toString();

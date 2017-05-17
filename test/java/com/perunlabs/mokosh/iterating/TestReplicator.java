@@ -1,7 +1,7 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
-import static com.perunlabs.mokosh.flow.Replicator.replicate;
-import static com.perunlabs.mokosh.run.Run.run;
+import static com.perunlabs.mokosh.iterating.Replicator.replicate;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static com.perunlabs.mokosh.testing.Testing.collectToList;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
@@ -29,7 +29,7 @@ import org.junit.rules.Timeout;
 
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
 public class TestReplicator {
   @Rule
@@ -63,8 +63,8 @@ public class TestReplicator {
   public void replicates_twice() {
     given(iterator = asList(a, b, c).iterator());
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
-    given(runningB = run(() -> collectToList(replicator.iterator())));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
+    given(runningB = supplying(() -> collectToList(replicator.iterator())));
     when(() -> {
       runningA.await();
       runningB.await();
@@ -77,7 +77,7 @@ public class TestReplicator {
   public void iterator_blocks_until_all_iterators_are_requested() {
     given(iterator = asList(a, b, c).iterator());
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> replicator.iterator()));
+    given(runningA = supplying(() -> replicator.iterator()));
     given(sleepSeconds(0.1));
     when(runningA.isRunning());
     thenReturned(true);
@@ -87,8 +87,8 @@ public class TestReplicator {
   public void has_next_is_called_minimum_number_of_times() {
     given(iterator = spy(asList(a, b, c).iterator()));
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
-    given(runningB = run(() -> collectToList(replicator.iterator())));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
+    given(runningB = supplying(() -> collectToList(replicator.iterator())));
     when(() -> {
       runningA.await();
       runningB.await();
@@ -100,8 +100,8 @@ public class TestReplicator {
   public void next_blocks_until_all_iterators_call_next() {
     given(iterator = asList(a, b, c).iterator());
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
-    given(runningB = run(() -> replicator.iterator()));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
+    given(runningB = supplying(() -> replicator.iterator()));
     given(sleepSeconds(0.1));
     when(runningA.isRunning());
     thenReturned(true);
@@ -111,8 +111,8 @@ public class TestReplicator {
   public void cannot_get_more_iterators_than_count() {
     given(iterator = asList(a, b, c).iterator());
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
-    given(runningB = run(() -> collectToList(replicator.iterator())));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
+    given(runningB = supplying(() -> collectToList(replicator.iterator())));
     when(() -> replicator.iterator());
     thenThrown(MokoshException.class);
   }
@@ -121,7 +121,7 @@ public class TestReplicator {
   public void abort_when_blocked_on_has_next() {
     given(willSleepSeconds(1), iterator).hasNext();
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
     given(interruptMeAfterSeconds(0.1));
     when(() -> runningA.await());
     thenThrown(AbortException.class);
@@ -132,7 +132,7 @@ public class TestReplicator {
     given(willReturn(true), iterator).hasNext();
     given(willSleepSeconds(1), iterator).next();
     given(replicator = replicate(2, iterator));
-    given(runningA = run(() -> collectToList(replicator.iterator())));
+    given(runningA = supplying(() -> collectToList(replicator.iterator())));
     given(interruptMeAfterSeconds(0.1));
     when(() -> runningA.await());
     thenThrown(AbortException.class);

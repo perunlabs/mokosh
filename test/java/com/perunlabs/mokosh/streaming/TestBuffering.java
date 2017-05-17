@@ -1,7 +1,7 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.common.Unchecked.unchecked;
-import static com.perunlabs.mokosh.flow.BufferingStreaming.buffering;
+import static com.perunlabs.mokosh.streaming.Buffering.buffering;
 import static com.perunlabs.mokosh.testing.Testing.bytes;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.willSleepSeconds;
@@ -32,7 +32,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestBufferingStreaming {
+public class TestBuffering {
   @Rule
   public final Timeout timeout = seconds(1);
 

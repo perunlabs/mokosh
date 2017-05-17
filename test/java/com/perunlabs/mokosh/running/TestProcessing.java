@@ -1,6 +1,6 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
-import static com.perunlabs.mokosh.run.RunningProcess.run;
+import static com.perunlabs.mokosh.running.Processing.processing;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.withMessage;
 import static org.hamcrest.Matchers.equalTo;
@@ -32,7 +32,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestRunningProcess {
+public class TestProcessing {
   @Rule
   public final Timeout timeout = seconds(1);
 
@@ -55,7 +55,7 @@ public class TestRunningProcess {
   @Test
   public void writes_to_output_stream() {
     given(stdout = buffer);
-    given(running = run(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
     when(running.await().get());
     thenReturned();
     thenEqual(buffer.toByteArray(), encode(string));
@@ -65,7 +65,7 @@ public class TestRunningProcess {
   public void writes_to_error_stream() {
     given(stdin = new ByteArrayInputStream(new byte[0]));
     given(stderr = buffer);
-    given(running = run(new ProcessBuilder("cat", "abcdefg"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("cat", "abcdefg"), stdin, stdout, stderr));
     when(() -> running.await().get());
     thenThrown();
     thenEqual(buffer.toByteArray(), encode("cat: abcdefg: No such file or directory\n"));
@@ -75,7 +75,7 @@ public class TestRunningProcess {
   public void reads_from_input_stream() {
     given(stdout = buffer);
     given(stdin = new ByteArrayInputStream(encode(string)));
-    given(running = run(new ProcessBuilder("tee"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("tee"), stdin, stdout, stderr));
     when(running.await().get());
     thenReturned();
     thenEqual(buffer.toByteArray(), encode(string));
@@ -83,7 +83,7 @@ public class TestRunningProcess {
 
   @Test
   public void awaits_completion() {
-    given(running = run(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
     when(running.await().get());
     thenReturned();
     then(!running.isRunning());
@@ -91,7 +91,7 @@ public class TestRunningProcess {
 
   @Test
   public void awaiting_is_abortable() {
-    given(running = run(new ProcessBuilder("sleep", "1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "1"), stdin, stdout, stderr));
     given(interruptMeAfterSeconds(0.1));
     when(() -> running.await());
     thenThrown(AbortException.class);
@@ -99,14 +99,14 @@ public class TestRunningProcess {
 
   @Test
   public void is_running_until_completion() {
-    given(running = run(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
     when(running.isRunning());
     thenReturned(true);
   }
 
   @Test
   public void is_not_running_after_completion() {
-    given(running = run(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
     given(running.await());
     when(running.isRunning());
     thenReturned(false);
@@ -114,7 +114,7 @@ public class TestRunningProcess {
 
   @Test
   public void aborts() {
-    given(running = run(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
     given(result = running.abort().await());
     when(() -> result.get());
     thenThrown(RuntimeException.class);
@@ -124,7 +124,7 @@ public class TestRunningProcess {
   @Test
   public void aborting_has_no_effect_if_not_running() {
     given(stdout = buffer);
-    given(running = run(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
     given(running.await());
     when(running.abort().await().get());
     thenEqual(buffer.toByteArray(), encode(string));
@@ -133,7 +133,7 @@ public class TestRunningProcess {
 
   @Test
   public void abort_returns_this() {
-    given(running = run(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("sleep", "0.1"), stdin, stdout, stderr));
     when(running.abort());
     thenReturned(running);
   }
@@ -145,7 +145,7 @@ public class TestRunningProcess {
         throw new RuntimeException();
       }
     });
-    given(running = run(new ProcessBuilder("tee"), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("tee"), stdin, stdout, stderr));
     when(running.await());
     thenCalledNever(stdout).close();
     thenCalledNever(stderr).close();
@@ -154,21 +154,21 @@ public class TestRunningProcess {
   @Test
   public void closes_stdin() throws IOException {
     given(stdin = spy(new ByteArrayInputStream(new byte[0])));
-    given(running = run(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
     when(running.await());
     thenCalled(stdin).close();
   }
 
   @Test
   public void closes_stdout() throws IOException {
-    given(running = run(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
     when(running.await());
     thenCalled(stdout).close();
   }
 
   @Test
   public void closes_stderr() throws IOException {
-    given(running = run(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
+    given(running = processing(new ProcessBuilder("echo", "-n", string), stdin, stdout, stderr));
     when(running.await());
     thenCalled(stdout).close();
   }
@@ -176,28 +176,28 @@ public class TestRunningProcess {
   @Test
   public void null_checks_process_builder() {
     given(processBuilder = null);
-    when(() -> run(processBuilder, stdin, stdout, stderr));
+    when(() -> processing(processBuilder, stdin, stdout, stderr));
     thenThrown(MokoshException.class);
   }
 
   @Test
   public void null_checks_process_stdin() {
     given(stdin = null);
-    when(() -> run(processBuilder, stdin, stdout, stderr));
+    when(() -> processing(processBuilder, stdin, stdout, stderr));
     thenThrown(MokoshException.class);
   }
 
   @Test
   public void null_checks_process_stdout() {
     given(stdout = null);
-    when(() -> run(processBuilder, stdin, stdout, stderr));
+    when(() -> processing(processBuilder, stdin, stdout, stderr));
     thenThrown(MokoshException.class);
   }
 
   @Test
   public void null_checks_process_stderr() {
     given(stderr = null);
-    when(() -> run(processBuilder, stdin, stdout, stderr));
+    when(() -> processing(processBuilder, stdin, stdout, stderr));
     thenThrown(MokoshException.class);
   }
 

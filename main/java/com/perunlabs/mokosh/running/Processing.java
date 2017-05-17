@@ -1,9 +1,10 @@
-package com.perunlabs.mokosh.run;
+package com.perunlabs.mokosh.running;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
 import static com.perunlabs.mokosh.common.Unchecked.unchecked;
-import static com.perunlabs.mokosh.run.EntangledRunning.entangle;
+import static com.perunlabs.mokosh.running.Entangling.entangle;
+import static com.perunlabs.mokosh.running.Supplying.supplying;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,16 +14,16 @@ import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.AbortException;
 
-public class RunningProcess implements Running<Void> {
+public class Processing implements Running<Void> {
   private final Process process;
   private final Running<Void> pumping;
 
-  private RunningProcess(Process process, Running<Void> pumping) {
+  private Processing(Process process, Running<Void> pumping) {
     this.process = process;
     this.pumping = pumping;
   }
 
-  public static Running<Void> run(
+  public static Running<Void> processing(
       ProcessBuilder processBuilder,
       InputStream stdin,
       OutputStream stdout,
@@ -41,7 +42,7 @@ public class RunningProcess implements Running<Void> {
       throw unchecked(e);
     }
 
-    Running<Void> pumpingStdin = Run.run(unchecked(() -> {
+    Running<Void> pumpingStdin = supplying(unchecked(() -> {
       try (OutputStream processStdin = process.getOutputStream()) {
         try {
           pump(stdin, processStdin);
@@ -53,7 +54,7 @@ public class RunningProcess implements Running<Void> {
         }
       }
     }));
-    Running<Void> pumpingStdout = Run.run(unchecked(() -> {
+    Running<Void> pumpingStdout = supplying(unchecked(() -> {
       try (InputStream processStdout = process.getInputStream()) {
         pump(processStdout, stdout);
       } finally {
@@ -62,7 +63,7 @@ public class RunningProcess implements Running<Void> {
         }
       }
     }));
-    Running<Void> pumpingStderr = Run.run(unchecked(() -> {
+    Running<Void> pumpingStderr = supplying(unchecked(() -> {
       try (InputStream processStderr = process.getErrorStream()) {
         pump(processStderr, stderr);
       } finally {
@@ -72,7 +73,7 @@ public class RunningProcess implements Running<Void> {
       }
     }));
     Running<Void> pumping = entangle(pumpingStdin, pumpingStdout, pumpingStderr);
-    return new RunningProcess(process, pumping);
+    return new Processing(process, pumping);
   }
 
   public boolean isRunning() {

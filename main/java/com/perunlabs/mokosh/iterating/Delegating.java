@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static java.lang.String.format;
@@ -6,13 +6,13 @@ import static java.lang.String.format;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
-public class DelegatingIterating<E> implements Iterating<E> {
+public class Delegating<E> implements Iterating<E> {
   private final Running<Void> running;
   private final Iterator<E> iterator;
 
-  private DelegatingIterating(Running<Void> running, Iterator<E> iterator) {
+  private Delegating(Running<Void> running, Iterator<E> iterator) {
     this.running = running;
     this.iterator = iterator;
   }
@@ -20,7 +20,7 @@ public class DelegatingIterating<E> implements Iterating<E> {
   public static <E> Iterating<E> iterating(Running<Void> running, Iterator<E> iterator) {
     check(running != null);
     check(iterator != null);
-    return new DelegatingIterating<>(running, iterator);
+    return new Delegating<>(running, iterator);
   }
 
   public Supplier<Void> await() {

@@ -1,7 +1,7 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
 import java.util.Iterator;
 
-import com.perunlabs.mokosh.run.Running;
+import com.perunlabs.mokosh.running.Running;
 
 public interface Iterating<T> extends Running<Void>, Iterator<T> {}

@@ -1,6 +1,6 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
-import static com.perunlabs.mokosh.flow.BufferingIterating.buffering;
+import static com.perunlabs.mokosh.iterating.Buffering.buffering;
 import static com.perunlabs.mokosh.testing.Testing.collectToList;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.willSleepSeconds;
@@ -27,7 +27,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestBufferingIterating {
+public class TestBuffering {
   @Rule
   public final Timeout timeout = seconds(1);
 

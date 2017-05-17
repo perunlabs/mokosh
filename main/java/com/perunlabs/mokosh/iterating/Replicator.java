@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.flow;
+package com.perunlabs.mokosh.iterating;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.CachingIterator.caching;
