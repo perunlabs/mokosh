@@ -10,7 +10,6 @@ import com.perunlabs.mokosh.flow.Replicator;
 import com.perunlabs.mokosh.pipe.BlockingPipe;
 import com.perunlabs.mokosh.pipe.Buffer;
 import com.perunlabs.mokosh.pipe.MultiPipe;
-import com.perunlabs.mokosh.pipeline.Pipeline;
 import com.perunlabs.mokosh.run.EntangledRunning;
 import com.perunlabs.mokosh.run.Run;
 import com.perunlabs.mokosh.run.RunningProcess;
@@ -23,8 +22,7 @@ class Build {
   public static Object pipe = asList(
       BlockingPipe.class,
       MultiPipe.class,
-      Buffer.class,
-      Pipeline.class);
+      Buffer.class);
   public static Object flow = asList(
       BufferingStreaming.class,
       BufferingIterating.class,
