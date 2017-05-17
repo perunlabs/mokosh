@@ -1,4 +1,4 @@
-package com.perunlabs.mokosh.running;
+package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
@@ -6,6 +6,7 @@ import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.running.Entangling.entangle;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,26 +14,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.AbortException;
+import com.perunlabs.mokosh.running.Running;
 
-public class Processing implements Running<Void> {
-  private final Process process;
+public class Processing extends Streaming {
   private final Running<Void> pumping;
+  private final Process process;
+  private final InputStream input;
 
-  private Processing(Process process, Running<Void> pumping) {
-    this.process = process;
+  private Processing(Running<Void> pumping, Process process) {
     this.pumping = pumping;
+    this.process = process;
+    this.input = process.getInputStream();
   }
 
-  public static Running<Void> processing(
-      ProcessBuilder processBuilder,
-      InputStream stdin,
-      OutputStream stdout,
-      OutputStream stderr) {
+  public static Streaming processing(Command command) {
+    check(command != null);
 
-    check(processBuilder != null);
-    check(stdin != null);
-    check(stdout != null);
-    check(stderr != null);
+    InputStream stdin = command.stdin.orElse(new ByteArrayInputStream(new byte[0]));
+    OutputStream stderr = command.stderr.orElse(nullOutputStream());
+    ProcessBuilder processBuilder = new ProcessBuilder(command.command);
 
     AtomicBoolean broken = new AtomicBoolean(false);
     Process process;
@@ -54,15 +54,6 @@ public class Processing implements Running<Void> {
         }
       }
     }));
-    Running<Void> pumpingStdout = supplying(unchecked(() -> {
-      try (InputStream processStdout = process.getInputStream()) {
-        pump(processStdout, stdout);
-      } finally {
-        if (!broken.get()) {
-          stdout.close();
-        }
-      }
-    }));
     Running<Void> pumpingStderr = supplying(unchecked(() -> {
       try (InputStream processStderr = process.getErrorStream()) {
         pump(processStderr, stderr);
@@ -72,8 +63,8 @@ public class Processing implements Running<Void> {
         }
       }
     }));
-    Running<Void> pumping = entangle(pumpingStdin, pumpingStdout, pumpingStderr);
-    return new Processing(process, pumping);
+    Running<Void> pumping = entangle(pumpingStdin, pumpingStderr);
+    return new Processing(pumping, process);
   }
 
   public boolean isRunning() {
@@ -101,5 +92,53 @@ public class Processing implements Running<Void> {
     process.destroy();
     pumping.abort();
     return this;
+  }
+
+  public int read() throws IOException {
+    return input.read();
+  }
+
+  public int read(byte[] b) throws IOException {
+    return input.read(b);
+  }
+
+  public int read(byte[] b, int off, int len) throws IOException {
+    return input.read(b, off, len);
+  }
+
+  public long skip(long n) throws IOException {
+    return input.skip(n);
+  }
+
+  public int available() throws IOException {
+    return input.available();
+  }
+
+  public void close() throws IOException {
+    input.close();
+  }
+
+  @SuppressWarnings("sync-override")
+  public void mark(int readlimit) {
+    input.mark(readlimit);
+  }
+
+  @SuppressWarnings("sync-override")
+  public void reset() throws IOException {
+    input.reset();
+  }
+
+  public boolean markSupported() {
+    return input.markSupported();
+  }
+
+  private static OutputStream nullOutputStream() {
+    return new OutputStream() {
+      public void write(int b) {}
+
+      public void write(byte[] b) {}
+
+      public void write(byte[] b, int off, int len) {}
+    };
   }
 }

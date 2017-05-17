@@ -2,6 +2,10 @@ package com.perunlabs.mokosh.testing;
 
 import static java.lang.String.format;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -67,5 +71,18 @@ public class Testing {
         return null;
       }
     };
+  }
+
+  public static byte[] readAllBytes(InputStream input) {
+    try {
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      int oneByte;
+      while ((oneByte = input.read()) != -1) {
+        output.write(oneByte);
+      }
+      return output.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }

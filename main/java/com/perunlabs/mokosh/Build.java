@@ -4,13 +4,12 @@ import static java.util.Arrays.asList;
 
 import com.perunlabs.mokosh.iterating.Replicator;
 import com.perunlabs.mokosh.running.Entangling;
-import com.perunlabs.mokosh.running.Processing;
 import com.perunlabs.mokosh.running.Supplying;
+import com.perunlabs.mokosh.streaming.Processing;
 
 class Build {
   public static Object run = asList(
       Supplying.class,
-      Processing.class,
       Entangling.class);
 
   public static Object iterating = asList(
@@ -19,6 +18,7 @@ class Build {
       com.perunlabs.mokosh.iterating.Delegating.class);
 
   public static Object streaming = asList(
+      Processing.class,
       com.perunlabs.mokosh.streaming.Buffering.class,
       com.perunlabs.mokosh.streaming.Delegating.class);
 }
