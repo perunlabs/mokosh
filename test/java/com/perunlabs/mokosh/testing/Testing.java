@@ -38,6 +38,18 @@ public class Testing {
     return null;
   }
 
+  public static Matcher<Throwable> causedBy(Matcher<Throwable> causeMatcher) {
+    return new TypeSafeMatcher<Throwable>() {
+      protected boolean matchesSafely(Throwable throwable) {
+        return causeMatcher.matches(throwable.getCause());
+      }
+
+      public void describeTo(Description description) {
+        description.appendText(format("causedBy(%s)", causeMatcher));
+      }
+    };
+  }
+
   public static Matcher<Throwable> withMessage(Matcher<String> messageMatcher) {
     return new TypeSafeMatcher<Throwable>() {
       protected boolean matchesSafely(Throwable item) {

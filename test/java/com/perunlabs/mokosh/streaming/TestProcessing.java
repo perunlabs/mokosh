@@ -2,10 +2,12 @@ package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.streaming.Command.command;
 import static com.perunlabs.mokosh.streaming.Processing.processing;
+import static com.perunlabs.mokosh.testing.Testing.causedBy;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.readAllBytes;
 import static com.perunlabs.mokosh.testing.Testing.withMessage;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
 import static org.testory.Testory.givenTest;
@@ -22,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.function.Supplier;
 
@@ -118,12 +121,22 @@ public class TestProcessing {
   }
 
   @Test
-  public void aborts() {
+  public void aborts_running() {
     given(processing = processing(command("sleep", "0.1")));
     given(result = processing.abort().await());
     when(() -> result.get());
     thenThrown(RuntimeException.class);
     thenThrown(withMessage(equalTo("exit status = 143")));
+  }
+
+  @Test
+  public void aborts_streaming() {
+    given(processing = processing(command("sleep", "0.1")));
+    given(result = processing.abort().await());
+    when(() -> readAllBytes(processing));
+    thenThrown(UncheckedIOException.class);
+    thenThrown(causedBy(instanceOf(IOException.class)));
+    thenThrown(causedBy(withMessage(equalTo("Stream closed"))));
   }
 
   @Test
