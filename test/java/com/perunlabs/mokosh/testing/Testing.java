@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +35,18 @@ public class Testing {
       throw new AbortException(e);
     }
     return null;
+  }
+
+  public static Matcher<Throwable> causedBy(Matcher<Throwable> causeMatcher) {
+    return new TypeSafeMatcher<Throwable>() {
+      protected boolean matchesSafely(Throwable throwable) {
+        return causeMatcher.matches(throwable.getCause());
+      }
+
+      public void describeTo(Description description) {
+        description.appendText(format("causedBy(%s)", causeMatcher));
+      }
+    };
   }
 
   public static Matcher<Throwable> withMessage(Matcher<String> messageMatcher) {
@@ -73,16 +84,12 @@ public class Testing {
     };
   }
 
-  public static byte[] readAllBytes(InputStream input) {
-    try {
-      ByteArrayOutputStream output = new ByteArrayOutputStream();
-      int oneByte;
-      while ((oneByte = input.read()) != -1) {
-        output.write(oneByte);
-      }
-      return output.toByteArray();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+  public static byte[] readAllBytes(InputStream input) throws IOException {
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    int oneByte;
+    while ((oneByte = input.read()) != -1) {
+      output.write(oneByte);
     }
+    return output.toByteArray();
   }
 }

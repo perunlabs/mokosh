@@ -2,14 +2,15 @@ package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
-import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.running.Entangling.entangle;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
+import static java.lang.String.join;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -24,7 +25,7 @@ public class Processing extends Streaming {
   private Processing(Running<Void> pumping, Process process) {
     this.pumping = pumping;
     this.process = process;
-    this.input = process.getInputStream();
+    this.input = process.getErrorStream();
   }
 
   public static Streaming processing(Command command) {
@@ -32,37 +33,52 @@ public class Processing extends Streaming {
 
     InputStream stdin = command.stdin.orElse(new ByteArrayInputStream(new byte[0]));
     OutputStream stderr = command.stderr.orElse(nullOutputStream());
-    ProcessBuilder processBuilder = new ProcessBuilder(command.command);
+    ProcessBuilder processBuilder = new ProcessBuilder(
+        "/bin/sh",
+        "-c",
+        join(" ", command.command) + " 3>&1 1>&2 2>&3 3>&-");
 
-    AtomicBoolean broken = new AtomicBoolean(false);
     Process process;
     try {
       process = processBuilder.start();
     } catch (IOException e) {
-      throw unchecked(e);
+      throw new UncheckedIOException(e);
     }
 
-    Running<Void> pumpingStdin = supplying(unchecked(() -> {
-      try (OutputStream processStdin = process.getOutputStream()) {
-        try {
-          pump(stdin, processStdin);
-        } catch (RuntimeException | Error e) {
-          broken.set(true);
-          process.destroy();
-        } finally {
-          stdin.close();
-        }
+    AtomicBoolean broken = new AtomicBoolean(false);
+
+    Running<Void> pumpingStdin = supplying(() -> {
+      try {
+        OutputStream processStdin = process.getOutputStream();
+        pump(stdin, processStdin);
+        processStdin.close();
+      } catch (RuntimeException | Error e) {
+        broken.set(true);
+        process.destroy();
+        throw e;
+      } catch (IOException e) {
+        broken.set(true);
+        process.destroy();
+        throw new UncheckedIOException(e);
       }
-    }));
-    Running<Void> pumpingStderr = supplying(unchecked(() -> {
-      try (InputStream processStderr = process.getErrorStream()) {
+      try {
+        stdin.close();
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    });
+    Running<Void> pumpingStderr = supplying(() -> {
+      try {
+        InputStream processStderr = process.getInputStream();
         pump(processStderr, stderr);
-      } finally {
         if (!broken.get()) {
           stderr.close();
         }
+        processStderr.close();
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
       }
-    }));
+    });
     Running<Void> pumping = entangle(pumpingStdin, pumpingStderr);
     return new Processing(pumping, process);
   }

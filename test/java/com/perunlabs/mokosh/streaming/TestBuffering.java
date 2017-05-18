@@ -1,9 +1,9 @@
 package com.perunlabs.mokosh.streaming;
 
-import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.streaming.Buffering.buffering;
 import static com.perunlabs.mokosh.testing.Testing.bytes;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
+import static com.perunlabs.mokosh.testing.Testing.readAllBytes;
 import static com.perunlabs.mokosh.testing.Testing.willSleepSeconds;
 import static java.lang.String.format;
 import static org.junit.rules.Timeout.seconds;
@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,28 +53,28 @@ public class TestBuffering {
   }
 
   @Test
-  public void streams_single_byte() {
+  public void streams_single_byte() throws IOException {
     given(streaming = buffering(100, new ByteArrayInputStream(bytes(1))));
     when(read(streaming));
     thenReturned(bytes(1));
   }
 
   @Test
-  public void streams_many_bytes() {
+  public void streams_many_bytes() throws IOException {
     given(streaming = buffering(1000, new ByteArrayInputStream(bytes(1_000_000))));
     when(read(streaming));
     thenReturned(bytes(1_000_000));
   }
 
   @Test
-  public void streams_many_bytes_buffered() {
+  public void streams_many_bytes_buffered() throws IOException {
     given(streaming = buffering(1_000_000, new ByteArrayInputStream(bytes(10_000_000))));
     when(readBuffered(streaming, 10_000));
     thenReturned(bytes(10_000_000));
   }
 
   @Test
-  public void reads_after_buffering_completed() {
+  public void reads_after_buffering_completed() throws IOException {
     given(streaming = buffering(1_000, new ByteArrayInputStream(bytes(500))));
     given(streaming.await());
     when(read(streaming));
@@ -94,7 +95,7 @@ public class TestBuffering {
     given(streaming = buffering(1, input));
     given(interruptMeAfterSeconds(0.1));
     when(() -> streaming.read());
-    thenThrown(AbortException.class);
+    thenThrown(InterruptedIOException.class);
     then(streaming.isRunning());
   }
 
@@ -104,7 +105,7 @@ public class TestBuffering {
     given(streaming = buffering(1, input));
     given(interruptMeAfterSeconds(0.1));
     when(() -> streaming.read(bytes));
-    thenThrown(AbortException.class);
+    thenThrown(InterruptedIOException.class);
     then(streaming.isRunning());
   }
 
@@ -114,7 +115,7 @@ public class TestBuffering {
     given(streaming = buffering(1, input));
     given(interruptMeAfterSeconds(0.1));
     when(() -> streaming.read(bytes, 0, 1));
-    thenThrown(AbortException.class);
+    thenThrown(InterruptedIOException.class);
     then(streaming.isRunning());
   }
 
@@ -143,11 +144,20 @@ public class TestBuffering {
 
   @Test
   public void aborts_running_while_blocked() throws IOException {
-    given(willSleepSeconds(0.2), onInstance(input));
+    given(willSleepSeconds(1), onInstance(input));
     given(streaming = buffering(1, input));
     when(streaming.abort().await());
     thenReturned();
     then(!streaming.isRunning());
+  }
+
+  @Test
+  public void aborts_reading_while_blocked() throws IOException {
+    given(willSleepSeconds(1), onInstance(input));
+    given(streaming = buffering(1, input));
+    given(interruptMeAfterSeconds(0.1));
+    when(() -> readAllBytes(streaming));
+    thenThrown(InterruptedIOException.class);
   }
 
   @Test
@@ -169,30 +179,22 @@ public class TestBuffering {
     thenThrown(MokoshException.class);
   }
 
-  private static byte[] read(InputStream input) {
-    try {
-      ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-      int oneByte;
-      while ((oneByte = input.read()) != -1) {
-        bytes.write(oneByte);
-      }
-      return bytes.toByteArray();
-    } catch (IOException e) {
-      throw unchecked(e);
+  private static byte[] read(InputStream input) throws IOException {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    int oneByte;
+    while ((oneByte = input.read()) != -1) {
+      bytes.write(oneByte);
     }
+    return bytes.toByteArray();
   }
 
-  private static byte[] readBuffered(InputStream input, int size) {
+  private static byte[] readBuffered(InputStream input, int size) throws IOException {
     byte[] buffer = new byte[size];
-    try {
-      ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-      int count;
-      while ((count = input.read(buffer)) != -1) {
-        bytes.write(buffer, 0, count);
-      }
-      return bytes.toByteArray();
-    } catch (IOException e) {
-      throw unchecked(e);
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    int count;
+    while ((count = input.read(buffer)) != -1) {
+      bytes.write(buffer, 0, count);
     }
+    return bytes.toByteArray();
   }
 }
