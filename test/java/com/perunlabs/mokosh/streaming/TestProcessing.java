@@ -2,7 +2,6 @@ package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.streaming.Command.command;
 import static com.perunlabs.mokosh.streaming.Processing.processing;
-import static com.perunlabs.mokosh.testing.Testing.causedBy;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.readAllBytes;
 import static com.perunlabs.mokosh.testing.Testing.withMessage;
@@ -24,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.function.Supplier;
 
@@ -54,7 +52,7 @@ public class TestProcessing {
   }
 
   @Test
-  public void reads_from_stdin_and_writes_to_stdout() {
+  public void reads_from_stdin_and_writes_to_stdout() throws IOException {
     given(stdin = new ByteArrayInputStream(encode(string)));
     given(processing = processing(command("tee").stdin(stdin)));
     when(readAllBytes(processing));
@@ -62,7 +60,7 @@ public class TestProcessing {
   }
 
   @Test
-  public void writes_to_stdout() {
+  public void writes_to_stdout() throws IOException {
     given(processing = processing(command("echo", "-n", string)));
     when(readAllBytes(processing));
     thenReturned(encode(string));
@@ -134,9 +132,8 @@ public class TestProcessing {
     given(processing = processing(command("sleep", "0.1")));
     given(result = processing.abort().await());
     when(() -> readAllBytes(processing));
-    thenThrown(UncheckedIOException.class);
-    thenThrown(causedBy(instanceOf(IOException.class)));
-    thenThrown(causedBy(withMessage(equalTo("Stream closed"))));
+    thenThrown(instanceOf(IOException.class));
+    thenThrown(withMessage(equalTo("Stream closed")));
   }
 
   @Test
