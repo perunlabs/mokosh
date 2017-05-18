@@ -2,7 +2,6 @@ package com.perunlabs.mokosh.streaming;
 
 import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
-import static com.perunlabs.mokosh.common.Unchecked.unchecked;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.lang.String.format;
 
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.UncheckedIOException;
 import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.running.Running;
@@ -35,7 +35,7 @@ public class Buffering extends Streaming {
           input.close();
           pipedOutput.close();
         } catch (IOException e) {
-          throw unchecked(e);
+          throw new UncheckedIOException(e);
         }
       });
       return new Buffering(pumping, pipedInput) {
@@ -44,7 +44,7 @@ public class Buffering extends Streaming {
         }
       };
     } catch (IOException e) {
-      throw unchecked(e);
+      throw new UncheckedIOException(e);
     }
   }
 
@@ -60,64 +60,36 @@ public class Buffering extends Streaming {
     return pumping.isRunning();
   }
 
-  public int read() {
-    try {
-      return input.read();
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public int read() throws IOException {
+    return input.read();
   }
 
-  public int read(byte[] b) {
-    try {
-      return input.read(b);
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public int read(byte[] b) throws IOException {
+    return input.read(b);
   }
 
-  public int read(byte[] b, int off, int len) {
-    try {
-      return input.read(b, off, len);
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public int read(byte[] b, int off, int len) throws IOException {
+    return input.read(b, off, len);
   }
 
-  public long skip(long n) {
-    try {
-      return input.skip(n);
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public long skip(long n) throws IOException {
+    return input.skip(n);
   }
 
-  public int available() {
-    try {
-      return input.available();
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public int available() throws IOException {
+    return input.available();
   }
 
-  public void close() {
-    try {
-      input.close();
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public void close() throws IOException {
+    input.close();
   }
 
   public synchronized void mark(int readlimit) {
     input.mark(readlimit);
   }
 
-  public synchronized void reset() {
-    try {
-      input.reset();
-    } catch (IOException e) {
-      throw unchecked(e);
-    }
+  public synchronized void reset() throws IOException {
+    input.reset();
   }
 
   public boolean markSupported() {
