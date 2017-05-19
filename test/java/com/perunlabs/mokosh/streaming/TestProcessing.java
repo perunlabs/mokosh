@@ -5,6 +5,7 @@ import static com.perunlabs.mokosh.streaming.Processing.processing;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.readAllBytes;
 import static com.perunlabs.mokosh.testing.Testing.withMessage;
+import static java.lang.String.format;
 import static java.nio.file.Files.write;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -202,6 +203,13 @@ public class TestProcessing {
     given(processing = processing(command("echo", "-n", string).stderr(stderr)));
     when(processing.await());
     thenCalled(stderr).close();
+  }
+
+  @Test
+  public void implements_to_string() {
+    given(processing = processing(command("echo", "-n", string)));
+    when(processing.toString());
+    thenReturned(format("processing(echo -n %s)", string));
   }
 
   @Test

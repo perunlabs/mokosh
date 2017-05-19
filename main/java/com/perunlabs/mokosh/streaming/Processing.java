@@ -4,6 +4,7 @@ import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
 import static com.perunlabs.mokosh.running.Entangling.entangle;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
+import static java.lang.String.format;
 import static java.lang.String.join;
 
 import java.io.ByteArrayInputStream;
@@ -80,7 +81,11 @@ public class Processing extends Streaming {
       }
     });
     Running<Void> pumping = entangle(pumpingStdin, pumpingStderr);
-    return new Processing(pumping, process);
+    return new Processing(pumping, process) {
+      public String toString() {
+        return format("processing(%s)", join(" ", command.command));
+      }
+    };
   }
 
   public boolean isRunning() {
