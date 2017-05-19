@@ -92,34 +92,6 @@ public class TestEntangling {
   }
 
   @Test
-  public void failed_first_aborts_second() {
-    given(runningA = supplying(() -> {
-      throw new RuntimeException();
-    }));
-    given(runningB = supplying(() -> {
-      sleepSeconds(0.1);
-    }));
-    given(entangle(runningA, runningB).await());
-    given(result = runningB.await());
-    when(() -> result.get());
-    thenThrown(AbortException.class);
-  }
-
-  @Test
-  public void failed_second_aborts() {
-    given(runningA = supplying(() -> {
-      sleepSeconds(0.1);
-    }));
-    given(runningB = supplying(() -> {
-      throw new RuntimeException();
-    }));
-    given(entangle(runningA, runningB).await());
-    given(result = runningA.await());
-    when(() -> result.get());
-    thenThrown(AbortException.class);
-  }
-
-  @Test
   public void aborts_all() {
     given(running = entangle(runningA, runningB));
     when(running.abort());

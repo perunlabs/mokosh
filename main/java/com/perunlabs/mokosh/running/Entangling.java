@@ -1,7 +1,6 @@
 package com.perunlabs.mokosh.running;
 
 import static com.perunlabs.mokosh.MokoshException.check;
-import static com.perunlabs.mokosh.common.Lambdas.failed;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
@@ -40,13 +39,6 @@ public class Entangling<T> implements Running<T> {
   }
 
   public Supplier<T> await() {
-    allRunnings.forEach(running -> {
-      supplying(() -> {
-        if (failed(running.await())) {
-          allRunnings.forEach(Running::abort);
-        }
-      });
-    });
     try {
       allRunnings.forEach(Running::await);
     } catch (AbortException e) {
