@@ -3,6 +3,7 @@ package com.perunlabs.mokosh.iterating;
 import static com.perunlabs.mokosh.iterating.Buffering.buffering;
 import static com.perunlabs.mokosh.testing.Testing.collectToList;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
+import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
 import static com.perunlabs.mokosh.testing.Testing.willSleepSeconds;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -55,11 +56,11 @@ public class TestBuffering {
   }
 
   @Test
-  public void reads_after_iterating_completed() {
-    given(iterating = buffering(3, asList(a).iterator()));
-    given(iterating.await());
-    when(collectToList(iterating));
-    thenReturned(asList(a));
+  public void awaits_until_last_element_is_read() {
+    given(iterating = buffering(1, asList(a).iterator()));
+    given(sleepSeconds(0.1));
+    when(iterating.isRunning());
+    thenReturned(true);
   }
 
   @Test

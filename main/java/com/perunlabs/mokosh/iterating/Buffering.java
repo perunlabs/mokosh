@@ -51,6 +51,9 @@ public class Buffering<E> implements Iterating<E> {
           queue.add(next);
           untilChange.signal();
         }
+        while (queue.size() > 0) {
+          await(untilChange);
+        }
         closed = true;
         untilChange.signal();
       } finally {
