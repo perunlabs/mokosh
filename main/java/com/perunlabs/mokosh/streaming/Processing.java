@@ -4,6 +4,7 @@ import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Streams.pump;
 import static com.perunlabs.mokosh.running.Entangling.entangle;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
+import static java.lang.String.join;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class Processing extends Streaming {
   private Processing(Running<Void> pumping, Process process) {
     this.pumping = pumping;
     this.process = process;
-    this.input = process.getInputStream();
+    this.input = process.getErrorStream();
   }
 
   public static Streaming processing(Command command) {
@@ -32,7 +33,10 @@ public class Processing extends Streaming {
 
     InputStream stdin = command.stdin.orElse(new ByteArrayInputStream(new byte[0]));
     OutputStream stderr = command.stderr.orElse(nullOutputStream());
-    ProcessBuilder processBuilder = new ProcessBuilder(command.command);
+    ProcessBuilder processBuilder = new ProcessBuilder(
+        "/bin/sh",
+        "-c",
+        join(" ", command.command) + " 3>&1 1>&2 2>&3 3>&-");
 
     Process process;
     try {
@@ -65,7 +69,7 @@ public class Processing extends Streaming {
     });
     Running<Void> pumpingStderr = supplying(() -> {
       try {
-        InputStream processStderr = process.getErrorStream();
+        InputStream processStderr = process.getInputStream();
         pump(processStderr, stderr);
         if (!broken.get()) {
           stderr.close();

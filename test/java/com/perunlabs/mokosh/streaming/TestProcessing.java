@@ -5,6 +5,7 @@ import static com.perunlabs.mokosh.streaming.Processing.processing;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.readAllBytes;
 import static com.perunlabs.mokosh.testing.Testing.withMessage;
+import static java.nio.file.Files.write;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.rules.Timeout.seconds;
@@ -21,6 +22,7 @@ import static org.testory.Testory.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -29,6 +31,7 @@ import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
 
 import com.perunlabs.mokosh.AbortException;
@@ -37,12 +40,15 @@ import com.perunlabs.mokosh.MokoshException;
 public class TestProcessing {
   @Rule
   public final Timeout timeout = seconds(1);
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
   private String string;
   private Streaming processing;
   private Supplier<Void> result;
   private InputStream stdin;
   private ByteArrayOutputStream stderr;
+  private File file;
 
   @Before
   public void before() {
@@ -64,13 +70,32 @@ public class TestProcessing {
     given(processing = processing(command("echo", "-n", string)));
     when(readAllBytes(processing));
     thenReturned(encode(string));
+    thenEqual(stderr.toByteArray(), new byte[0]);
   }
 
   @Test
-  public void writes_to_stderr() {
+  public void writes_to_stderr() throws IOException {
     given(processing = processing(command("cat", "abcdefg").stderr(stderr)));
     when(processing.await());
+    thenEqual(readAllBytes(processing), new byte[0]);
     thenEqual(stderr.toByteArray(), encode("cat: abcdefg: No such file or directory\n"));
+  }
+
+  @Test
+  public void std_streams_are_fast() throws IOException {
+    given(stdin = new ByteArrayInputStream(new byte[1_000_000]));
+    given(processing = processing(command("tee").stdin(stdin)));
+    when(readAllBytes(processing));
+    thenReturned(new byte[1_000_000]);
+  }
+
+  @Test
+  public void stdout_is_unbuffered() throws IOException {
+    given(file = folder.newFile());
+    given(write(file.toPath(), encode("a")));
+    given(processing = processing(command("tail", "-F", file.getAbsolutePath())));
+    when(processing.read());
+    thenReturned((int) 'a');
   }
 
   @Test
