@@ -4,6 +4,7 @@ import static com.perunlabs.mokosh.running.Entangling.entangle;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
@@ -31,7 +32,7 @@ public class TestEntangling {
   @Rule
   public final Timeout timeout = seconds(1);
 
-  private Running<?> running, runningA, runningB;
+  private Running<?> running, runningA, runningB, runningC;
   private Supplier<?> result;
   private List<Object> log;
 
@@ -45,6 +46,7 @@ public class TestEntangling {
     running.abort();
     runningA.abort();
     runningB.abort();
+    runningC.abort();
   }
 
   @Test
@@ -203,6 +205,13 @@ public class TestEntangling {
     given(running = entangle(runningA, runningB));
     when(running.isRunning());
     thenReturned(false);
+  }
+
+  @Test
+  public void implements_to_string() {
+    given(running = entangle(runningA, runningB, runningC));
+    when(running.toString());
+    thenReturned(format("entangle(%s, %s, %s)", runningA, runningB, runningC));
   }
 
   /** should compile */
