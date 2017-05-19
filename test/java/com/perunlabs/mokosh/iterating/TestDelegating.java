@@ -11,6 +11,7 @@ import static org.testory.Testory.when;
 import static org.testory.Testory.willReturn;
 
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -74,6 +75,14 @@ public class TestDelegating {
     given(iterating = iterating(running, iterator));
     when(iterating.toString());
     thenReturned(format("iterating(%s, %s)", running, iterator));
+  }
+
+  @Test
+  public void nullifies_result() {
+    given(willReturn((Supplier<Foo>) () -> foo), running).await();
+    given(iterating = iterating(running, iterator));
+    when(iterating.await().get());
+    thenReturned(null);
   }
 
   @Test

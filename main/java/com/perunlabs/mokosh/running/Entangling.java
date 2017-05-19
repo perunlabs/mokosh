@@ -4,6 +4,7 @@ import static com.perunlabs.mokosh.MokoshException.check;
 import static com.perunlabs.mokosh.common.Lambdas.failed;
 import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,5 +64,11 @@ public class Entangling<T> implements Running<T> {
   public boolean isRunning() {
     return allRunnings.stream()
         .anyMatch(Running::isRunning);
+  }
+
+  public String toString() {
+    return allRunnings.stream()
+        .map(Object::toString)
+        .collect(joining(", ", "entangle(", ")"));
   }
 }
