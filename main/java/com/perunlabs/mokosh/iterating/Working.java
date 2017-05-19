@@ -5,8 +5,8 @@ import static com.perunlabs.mokosh.running.Supplying.supplying;
 import static java.lang.String.format;
 
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,43 +15,36 @@ import java.util.function.Supplier;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.running.Running;
 
-public class Buffering<E> implements Iterating<E> {
+public class Working<E> implements Iterating<E> {
   private final Lock lock = new ReentrantLock();
   private final Condition untilChange = lock.newCondition();
 
-  private final Running<Void> iterating;
-
-  private final List<E> queue = new LinkedList<>();
+  private final Running<Void> supplying;
+  private Optional<E> slot = Optional.empty();
   private boolean closed;
 
-  private Buffering(int limit, Iterator<E> iterator) {
-    iterating = supplying(() -> {
+  private Working(Iterator<E> iterator) {
+    supplying = supplying(() -> {
       lock.lock();
       try {
         while (true) {
+          E next;
           lock.unlock();
           try {
             if (!iterator.hasNext()) {
               break;
             }
-          } finally {
-            lock.lock();
-          }
-
-          while (queue.size() == limit) {
-            await(untilChange);
-          }
-          E next;
-          lock.unlock();
-          try {
             next = iterator.next();
           } finally {
             lock.lock();
           }
-          queue.add(next);
+          while (slot.isPresent()) {
+            await(untilChange);
+          }
+          slot = Optional.of(next);
           untilChange.signal();
         }
-        while (queue.size() > 0) {
+        while (slot.isPresent()) {
           await(untilChange);
         }
         closed = true;
@@ -62,36 +55,35 @@ public class Buffering<E> implements Iterating<E> {
     });
   }
 
-  public static <E> Iterating<E> buffering(int limit, Iterator<E> iterator) {
-    check(limit > 0);
+  public static <E> Iterating<E> working(Iterator<E> iterator) {
     check(iterator != null);
-    return new Buffering(limit, iterator) {
+    return new Working<E>(iterator) {
       public String toString() {
-        return format("buffering(%s, %s)", limit, iterator);
+        return format("working(%s)", iterator);
       }
     };
   }
 
   public Supplier<Void> await() {
-    return iterating.await();
+    return supplying.await();
   }
 
   public Running<Void> abort() {
-    return iterating.abort();
+    return supplying.abort();
   }
 
   public boolean isRunning() {
-    return iterating.isRunning();
+    return supplying.isRunning();
   }
 
   public boolean hasNext() {
     lock.lock();
     try {
       while (true) {
-        if (!queue.isEmpty()) {
+        if (slot.isPresent()) {
           return true;
         }
-        if (queue.isEmpty() && closed) {
+        if (!slot.isPresent() && closed) {
           return false;
         }
         await(untilChange);
@@ -104,11 +96,11 @@ public class Buffering<E> implements Iterating<E> {
   public E next() {
     lock.lock();
     try {
-      check(hasNext());
-      while (queue.isEmpty()) {
-        await(untilChange);
+      if (!hasNext()) {
+        throw new NoSuchElementException();
       }
-      E next = queue.remove(0);
+      E next = slot.get();
+      slot = Optional.empty();
       untilChange.signal();
       return next;
     } finally {
@@ -116,7 +108,7 @@ public class Buffering<E> implements Iterating<E> {
     }
   }
 
-  private void await(Condition condition) {
+  private static void await(Condition condition) {
     try {
       condition.await();
     } catch (InterruptedException e) {

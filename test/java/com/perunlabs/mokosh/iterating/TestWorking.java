@@ -1,13 +1,12 @@
 package com.perunlabs.mokosh.iterating;
 
-import static com.perunlabs.mokosh.iterating.Buffering.buffering;
+import static com.perunlabs.mokosh.iterating.Working.working;
 import static com.perunlabs.mokosh.testing.Testing.collectToList;
 import static com.perunlabs.mokosh.testing.Testing.interruptMeAfterSeconds;
 import static com.perunlabs.mokosh.testing.Testing.sleepSeconds;
 import static com.perunlabs.mokosh.testing.Testing.willSleepSeconds;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.stream.Stream.iterate;
 import static org.junit.rules.Timeout.seconds;
 import static org.testory.Testory.given;
 import static org.testory.Testory.givenTest;
@@ -28,7 +27,7 @@ import org.junit.rules.Timeout;
 import com.perunlabs.mokosh.AbortException;
 import com.perunlabs.mokosh.MokoshException;
 
-public class TestBuffering {
+public class TestWorking {
   @Rule
   public final Timeout timeout = seconds(1);
 
@@ -43,21 +42,21 @@ public class TestBuffering {
 
   @Test
   public void pipes_one_element() {
-    given(iterating = buffering(1, asList(a).iterator()));
+    given(iterating = working(asList(a).iterator()));
     when(collectToList(iterating));
     thenReturned(asList(a));
   }
 
   @Test
   public void pipes_many_elements() {
-    given(iterating = buffering(1, asList(a, b, c).iterator()));
+    given(iterating = working(asList(a, b, c).iterator()));
     when(collectToList(iterating));
     thenReturned(asList(a, b, c));
   }
 
   @Test
   public void awaits_until_last_element_is_read() {
-    given(iterating = buffering(1, asList(a).iterator()));
+    given(iterating = working(asList(a).iterator()));
     given(sleepSeconds(0.1));
     when(iterating.isRunning());
     thenReturned(true);
@@ -66,7 +65,7 @@ public class TestBuffering {
   @Test
   public void aborts_has_next() {
     given(willSleepSeconds(1), iterator).hasNext();
-    given(iterating = buffering(1, iterator));
+    given(iterating = working(iterator));
     given(interruptMeAfterSeconds(0.1));
     when(() -> iterating.hasNext());
     thenThrown(AbortException.class);
@@ -77,7 +76,7 @@ public class TestBuffering {
   public void aborts_next() {
     given(willReturn(true), iterator).hasNext();
     given(willSleepSeconds(1), iterator).next();
-    given(iterating = buffering(1, iterator));
+    given(iterating = working(iterator));
     given(interruptMeAfterSeconds(0.1));
     when(() -> iterating.next());
     thenThrown(AbortException.class);
@@ -86,7 +85,7 @@ public class TestBuffering {
 
   @Test
   public void aborts_awaiting() {
-    given(iterating = buffering(1, asList(a, b, c).iterator()));
+    given(iterating = working(asList(a, b).iterator()));
     given(interruptMeAfterSeconds(0.1));
     when(() -> iterating.await());
     thenThrown(AbortException.class);
@@ -94,17 +93,9 @@ public class TestBuffering {
   }
 
   @Test
-  public void aborts_running_while_iterating() {
-    given(iterating = buffering(1_000_000, iterate(a, i -> i).iterator()));
-    when(iterating.abort().await());
-    thenReturned();
-    then(!iterating.isRunning());
-  }
-
-  @Test
-  public void aborts_running_while_blocked() {
+  public void aborts_running() {
     given(willSleepSeconds(0.2), onInstance(iterator));
-    given(iterating = buffering(1, iterator));
+    given(iterating = working(iterator));
     when(iterating.abort().await());
     thenReturned();
     then(!iterating.isRunning());
@@ -112,20 +103,14 @@ public class TestBuffering {
 
   @Test
   public void implements_to_string() {
-    given(iterating = buffering(2, iterator));
+    given(iterating = working(iterator));
     when(iterating.toString());
-    thenReturned(format("buffering(%s, %s)", 2, iterator));
-  }
-
-  @Test
-  public void checks_that_size_is_positive() {
-    when(() -> buffering(0, iterator));
-    thenThrown(MokoshException.class);
+    thenReturned(format("working(%s)", iterator));
   }
 
   @Test
   public void checks_that_iterator_is_not_null() {
-    when(() -> buffering(1, null));
+    when(() -> working(null));
     thenThrown(MokoshException.class);
   }
 
