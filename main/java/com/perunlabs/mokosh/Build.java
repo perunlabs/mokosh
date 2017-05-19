@@ -14,6 +14,7 @@ class Build {
 
   public static Object iterating = asList(
       Replicator.class,
+      com.perunlabs.mokosh.iterating.Working.class,
       com.perunlabs.mokosh.iterating.Buffering.class,
       com.perunlabs.mokosh.iterating.Delegating.class);
 
