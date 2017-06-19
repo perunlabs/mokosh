@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import com.perunlabs.mokosh.AbortException;
+import com.perunlabs.mokosh.context.Configuration;
 
 public class Supplying {
   private static final AtomicInteger counter = new AtomicInteger(0);
@@ -18,7 +19,7 @@ public class Supplying {
     check(code != null);
     CountDownLatch executedLatch = new CountDownLatch(1);
     AtomicReference<Supplier<T>> executed = new AtomicReference<>();
-    Thread thread = new Thread(() -> {
+    Thread thread = Configuration.threadFactory().newThread(() -> {
       try {
         T returned = code.get();
         executed.set(() -> returned);
