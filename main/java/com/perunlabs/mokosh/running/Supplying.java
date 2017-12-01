@@ -26,6 +26,7 @@ public class Supplying {
         executed.set(() -> {
           throw e;
         });
+        throw e;
       } finally {
         executedLatch.countDown();
       }
